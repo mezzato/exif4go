@@ -1,9 +1,10 @@
 package exif4go
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"strconv"
-	"fmt"
 	"strings"
 )
 
@@ -80,11 +81,11 @@ type exifHeader struct {
 }
 
 func newExifHeader(file *os.File,
-endian []byte,
-offset int64,
-fakeExif bool,
-strict bool,
-debug bool) *exifHeader {
+	endian []byte,
+	offset int64,
+	fakeExif bool,
+	strict bool,
+	debug bool) *exifHeader {
 	tags := make(map[string]*IfdTag)
 	hdr := &exifHeader{file, endian, offset, fakeExif, strict, debug, tags}
 	return hdr
@@ -119,7 +120,7 @@ func (eh *exifHeader) s2n_intel(str []byte) (val int) {
    start of the EXIF information. 
    For some cameras that use relative tags, this offset may be relative to some other starting point.
 */
-func (eh *exifHeader) s2n(offset int, length uint, signed bool) (val int, err os.Error) {
+func (eh *exifHeader) s2n(offset int, length uint, signed bool) (val int, err error) {
 
 	eh.file.Seek(eh.offset+int64(offset), 0)
 
@@ -161,12 +162,12 @@ func (eh *exifHeader) n2s(offset int, length int) string {
 }
 
 // Return first IFD.
-func (eh *exifHeader) firstIfd() (int, os.Error) {
+func (eh *exifHeader) firstIfd() (int, error) {
 	return eh.s2n(4, 4, false)
 }
 
 // Return a pointer to next IFD.
-func (eh *exifHeader) nextIfd(ifd int) (val int, err os.Error) {
+func (eh *exifHeader) nextIfd(ifd int) (val int, err error) {
 	entries, err := eh.s2n(ifd, 2, false)
 	if err != nil {
 		return val, err
@@ -176,7 +177,7 @@ func (eh *exifHeader) nextIfd(ifd int) (val int, err os.Error) {
 }
 
 // Return a list of IFDs in the header.
-func (eh *exifHeader) listIfds() (a []int, err os.Error) {
+func (eh *exifHeader) listIfds() (a []int, err error) {
 	var i int
 	if i, err = eh.firstIfd(); err != nil {
 		return
@@ -194,10 +195,10 @@ func (eh *exifHeader) listIfds() (a []int, err os.Error) {
 
 // Return list of entries in this IFD.
 func (eh *exifHeader) dumpIfd(ifd int,
-ifdname string,
-dict map[int]*exifTag,
-relative int,
-stoptag string) (err os.Error) {
+	ifdname string,
+	dict map[int]*exifTag,
+	relative int,
+	stoptag string) (err error) {
 
 	if dict == nil {
 		dict = exifTags
@@ -245,7 +246,7 @@ stoptag string) (err os.Error) {
 				if !eh.strict {
 					continue
 				} else {
-					return os.NewError(fmt.Sprintf("unknown type %d in tag 0x%04X", fieldtype, tag))
+					return errors.New(fmt.Sprintf("unknown type %d in tag 0x%04X", fieldtype, tag))
 				}
 			}
 

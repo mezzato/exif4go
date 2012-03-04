@@ -1,9 +1,9 @@
 package exif4go
 
 import (
-	"os"
-	"io"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 )
 
@@ -14,7 +14,7 @@ func setDebug(deb bool) {
 	debug = deb
 }
 
-func writeInfo(a ...interface{}) (n int, err os.Error) {
+func writeInfo(a ...interface{}) (n int, err error) {
 	if debug {
 		if n, err = fmt.Println(a...); err != nil {
 			print("Error printing")
@@ -46,7 +46,7 @@ func (p IntSlice) contains(i int) bool {
 }
 
 // Process process an images file calling the ProcessFile function with default parameters.
-func Process(f *os.File, debug bool) (map[string]*IfdTag, os.Error) {
+func Process(f *os.File, debug bool) (map[string]*IfdTag, error) {
 	writeInfo("Processing using default parameters")
 	return ProcessFile(f, "UNDEF", true, false, debug)
 }
@@ -55,7 +55,7 @@ func Process(f *os.File, debug bool) (map[string]*IfdTag, os.Error) {
 	ProcessFile processes an image file (expects an open file object). 
 	This is the function that has to deal with all the arbitrary nasty bits of the EXIF standard.
 */
-func ProcessFile(f *os.File, stop_tag string, details bool, strict bool, debug bool) (map[string]*IfdTag, os.Error) {
+func ProcessFile(f *os.File, stop_tag string, details bool, strict bool, debug bool) (map[string]*IfdTag, error) {
 	// yah it"s cheesy...
 	if len(stop_tag) == 0 {
 		stop_tag = "UNDEF"
